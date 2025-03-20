@@ -14,22 +14,26 @@ function InitDBIfNeeded($dbServer, $dbUser, $dbPass, $dbName)
     }
 
     try {
-        $dbObj->query('CREATE TABLE `pubkeys` IF NOT EXISTS (
-        `user_index` bigint(20) unsigned NOT NULL,
-        `key_name` varchar(255) NOT NULL,
-        `key_type` varchar(31) NOT NULL,
-        `key_content` text NOT NULL,
-        `key_comment` varchar(255) NOT NULL,
-        KEY `user_index` (`user_index`),
-        CONSTRAINT `pubkeys_ibfk_1` FOREIGN KEY (`user_index`) REFERENCES `user_name` (`user_index`)
-        ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin');
-        $dbObj->query('CREATE TABLE `user_name` IF NOT EXISTS (
-        `user_index` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-        `user_name` varchar(255) NOT NULL,
-        PRIMARY KEY (`user_index`)
+        // 先に `user_name` を作成
+        $dbObj->query('CREATE TABLE IF NOT EXISTS `user_name` (
+            `user_index` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            `user_name` varchar(255) NOT NULL,
+            PRIMARY KEY (`user_index`)
         ) AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin');
+    
+        // `pubkeys` を後に作成
+        $dbObj->query('CREATE TABLE IF NOT EXISTS `pubkeys` (
+            `user_index` bigint(20) unsigned NOT NULL,
+            `key_name` varchar(255) NOT NULL,
+            `key_type` varchar(31) NOT NULL,
+            `key_content` text NOT NULL,
+            `key_comment` varchar(255) NOT NULL,
+            KEY `user_index` (`user_index`),
+            CONSTRAINT `pubkeys_ibfk_1` FOREIGN KEY (`user_index`) REFERENCES `user_name` (`user_index`)
+        ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin');
+    
     } catch (PDOException $e) {
-        return ['succeeded' => false, 'message' => 'テーブルの作成に失敗しました'];
+        return ['succeeded' => false, 'message' => 'テーブルの作成に失敗しました: '];
     }
     return ['succeeded' => true, 'message' => ''];
 }
